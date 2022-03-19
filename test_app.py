@@ -30,8 +30,8 @@ def test_get_xml_data_url():
     return
 
 def test_get_xml_data_url():
-    with pytest.raises(TypeError):
-        get_xml_data_url(404)
+    with pytest.raises(requests.exceptions.MissingSchema):
+        get_xml_data_url({})
     return 
 
 ############################################################################################################################
@@ -49,7 +49,7 @@ def test_get_xml_data_file():
 
 def test_get_xml_data_file():
     with pytest.raises(TypeError):
-        get_xml_data_file(404)
+        get_xml_data_file({})
     return 
 
 ############################################################################################################################
@@ -93,7 +93,7 @@ def test_epochs():
         # CALL EPOCHS() FUNCTION AND DECODE RESPONSE INTO STRING
         epoch_str = epochs().get_data().decode() 
         # DELIMIT RESPONSE STRING INTO LIST
-        test_epoch_list = epoch_str.replace('"','').strip('][\n').split(',')
+        test_epoch_list = epoch_str.replace(' ','').replace('"','').strip('][\n').split(',')
     # THEN TEST LIST 
     assert len(test_epoch_list)>0
     assert test_epoch_list[0] == '2022-042T12:00:00.000Z'
