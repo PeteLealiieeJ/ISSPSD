@@ -133,7 +133,7 @@ def epochs():
 
 
 @app.route('/epochs/<epoch>',methods=['GET'])
-def epoch_state(epoch):
+def epoch_state(epoch:str):
     """                                                                                                                                                                                              
     Called to return positioning information about specific epoch in the ISS positioning data set                                                                                                                                       
     args:                                                                                                                                                                                            
@@ -178,7 +178,7 @@ def countries():
 
 
 @app.route('/countries/<country>',methods=['GET'])
-def country_sightings(country):
+def country_sightings(country:str):
     """                                                                                                                                                                                              
     Called to return information about sightings in specified country in the ISS sighting data set                                                                                    
                                                                                                                                                                                                      
@@ -203,7 +203,7 @@ def country_sightings(country):
         return 'NO MATCH FOR INPUT COUNTRY KEY FOUND IN DATA SET \n'
 
 @app.route('/countries/<country>/regions',methods=['GET'])
-def country_regions(country):
+def country_regions(country:str):
     """                                                                                                                                                                                              
     Called to return sighting regions in specified country in the ISS sighting data set                                                                                                    
     args:                                                                                                                                                                                            
@@ -232,7 +232,7 @@ def country_regions(country):
 
 
 @app.route('/countries/<country>/regions/<region>',methods=['GET'])
-def country_region_info(country,region):
+def country_region_info(country:str,region:str):
     """                                                                                                                                                                                              
     Called to return sighting info in specified country and region in the ISS sighting data set                                                                                                              
     args:                                                                                                                                                                                            
@@ -267,7 +267,7 @@ def country_region_info(country,region):
 
 
 @app.route('/countries/<country>/regions/<region>/cities',methods=['GET'])
-def country_region_cities(country,region):
+def country_region_cities(country:str,region:str):
     """                                                                                                                                                                                              
     Called to return the cities in the specified country and region in the ISS sighting data set                                                                                                     
     args:
@@ -305,7 +305,7 @@ def country_region_cities(country,region):
 
 
 @app.route('/countries/<country>/regions/<region>/cities/<city>',methods=['GET'])
-def country_region_city_info(country,region,city):
+def country_region_city_info(country:str,region:str,city:str):
     """ 
     Called to return the sighting data in the specified country-region-city in the ISS sighting data set                                                                                                                                                          
     args:                                                                                                                                                                                                                                                            
