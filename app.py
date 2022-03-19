@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import requests 
 import xmltodict
+import logging 
 
 ############################################################################################################################
 ### CONSTANTS
@@ -31,6 +32,7 @@ def get_xml_data(url_str:str)->dict:
     """
     data_resp = requests.get(url=url_str)
     data_dict = xmltodict.parse(data_resp.content)
+    logging.info("DATA PARSED SUCCESSFULLY FROM URL")
     return data_dict
 
 
@@ -77,7 +79,7 @@ def usage_info():
     usage_str = '\n'
     for x in full_tab:
         usage_str += ( "    {: <70} {: <70} ".format(*x) + '\n' )
-    
+    logging.info("RETURNING USAGE INFORMATION CARD TO USER")
     return usage_str
 
 
@@ -96,6 +98,7 @@ def read_data_from_url():
     iss_epoch_data = get_xml_data(EPOCH_URL)['ndm']['oem']['body']['segment']['data']['stateVector']
     iss_sighting_data = get_xml_data(SIGHTING_URL)['visible_passes']['visible_pass']
     if not readonce:
+        logging.info("DATA LOADED ONCE BY USER")
         readonce = True
     return f'Data has been scraped from ISS positioning and sighting URL sources below: \n \
             Positioning: {EPOCH_URL} \n Sighting: {SIGHTING_URL} \n'
@@ -114,10 +117,12 @@ def epochs():
         (jsonify-ed list): Jsonified List containing all Epochs in Position Data Set                                                                                                                    
     """
     if not readonce:
+        logging.warning("USER HAS NOT LOADED DATA SET BUT ATTEMPTING TO USE SERVICES")
         return 'Use /load route to load data before proceeding \n'
     epoch_vec = []
     for x in iss_epoch_data:
         epoch_vec.append(x['EPOCH'])
+    logging.info("SENDING EPOCHS LIST TO USER")
     return jsonify(epoch_vec)
 
 
@@ -132,10 +137,13 @@ def epoch_state(epoch):
         (str): Error string stating that specified epoch was not found 
     """
     if not readonce:
+        logging.warning("USER HAS NOT LOADED DATA SET BUT ATTEMPTING TO USE SERVICES")
         return 'Use /load route to load data before proceeding \n'
     for x in iss_epoch_data:
         if epoch == x['EPOCH']:
+            logging.info("EPOCH KEY FOUND - SENDING RESPECTIVE DICTIONARY TO USER")
             return jsonify(x)
+    logging.error("NO MATCH FOR USER INPUT EPOCH")
     return 'NO MATCH FOR INPUT EPOCH KEY FOUND IN DATA SET \n'
 
 
@@ -153,11 +161,13 @@ def countries():
         (jsonify-ed list): Jsonified List containing all countries in sightings Data Set                                                                                       
     """
     if not readonce:
+        logging.warning("USER HAS NOT LOADED DATA SET BUT ATTEMPTING TO USE SERVICES")
         return 'Use /load route to load data before proceeding \n'
     countries_vec = []
     for x in iss_sighting_data:
         if not (x['country'] in countries_vec):
             countries_vec.append(x['country'])
+    logging.info("SENDING COUNTRIES LIST TO USER")
     return jsonify(countries_vec)
 
 
@@ -173,14 +183,17 @@ def country_sightings(country):
         (str): Error string stating that specified country was not found                                                                                                                               
     """
     if not readonce:
+        logging.warning("USER HAS NOT LOADED DATA SET BUT ATTEMPTING TO USE SERVICES")
         return 'Use /load route to load data before proceeding \n'
     country_info_vec = []
     for x in iss_sighting_data:
         if country == x['country']:
             country_info_vec.append(x)
     if len(country_info_vec)>0:
+        logging.info("SENDING COUNTRY SIGHTING INFORMATION TO USER")
         return jsonify(country_info_vec)
     else:
+        logging.error("NO MATCH FOR USER INPUT COUNTRY")
         return 'NO MATCH FOR INPUT COUNTRY KEY FOUND IN DATA SET \n'
 
 @app.route('/countries/<country>/regions',methods=['GET'])
@@ -194,6 +207,7 @@ def country_regions(country):
         (str): Error string stating that specified country was not found                                                                                                                                 
     """
     if not readonce:
+        logging.warning("USER HAS NOT LOADED DATA SET BUT ATTEMPTING TO USE SERVICES")
         return 'Use /load route to load data before proceeding \n'
     country_info_vec = []
     for x in iss_sighting_data:
@@ -204,8 +218,10 @@ def country_regions(country):
         for y in country_info_vec:
             if not (y['region'] in regions_list):
                 regions_list.append(y['region'])
+        logging.info("SENDING REGIONS (IN COUNTRY) LIST TO USER")
         return jsonify(regions_list)
     else:
+        logging.error("NO MATCH FOR USER INPUT COUNTRY")
         return 'NO MATCH FOR INPUT COUNTRY KEY FOUND IN DATA SET \n'
 
 
@@ -221,6 +237,7 @@ def country_region_info(country,region):
         (str): Error string stating that specified country or region was not found                                                                                                                           
     """
     if not readonce:
+        logging.warning("USER HAS NOT LOADED DATA SET BUT ATTEMPTING TO USE SERVICES")
         return 'Use /load route to load data before proceeding \n'
     country_info_vec = []
     for x in iss_sighting_data:
@@ -232,11 +249,14 @@ def country_region_info(country,region):
             if y['region'] == region:
                 region_info_vec.append(y)
         if len(region_info_vec)>0:
+            logging.info("SENDING COUNTRY-REGION SIGHTING INFORMATION TO USER")
             return jsonify(region_info_vec)
         else:
+            logging.error("NO MATCH FOR USER INPUT REGION")
             return 'NO MATCH FOR INPUT REGION KEY FOUND IN COUNTRY DATA SET \n'
         
     else:
+        logging.error("NO MATCH FOR USER INPUT COUNTRY")
         return 'NO MATCH FOR INPUT COUNTRY KEY FOUND IN DATA SET \n'
 
 
@@ -252,6 +272,7 @@ def country_region_cities(country,region):
         (str): Error string stating that specified country or region was not found                                                                                                                              
     """
     if not readonce:
+        logging.warning("USER HAS NOT LOADED DATA SET BUT ATTEMPTING TO USE SERVICES")
         return 'Use /load route to load data before proceeding \n'
     country_info_vec = []
     for x in iss_sighting_data:
@@ -267,10 +288,13 @@ def country_region_cities(country,region):
             for z in region_info_vec:
                 if not (z['city'] in cities_list):
                     cities_list.append(z['city'])
+            logging.info("SENDING CITIES (IN COUNTRY-REGION) LIST TO USER")
             return jsonify(cities_list)
         else:
+            logging.error("NO MATCH FOR USER INPUT REGION")
             return 'NO MATCH FOR INPUT REGION KEY FOUND IN COUNTRY DATA SET \n'
     else:
+        logging.error("NO MATCH FOR USER INPUT COUNTRY")
         return 'NO MATCH FOR INPUT COUNTRY KEY FOUND IN DATA SET \n'
 
 
@@ -287,6 +311,7 @@ def country_region_city_info(country,region,city):
         (str): Error string stating that specified country, region, or city was not found                                                                                                                                                                                                                                    
     """
     if not readonce:
+        logging.warning("USER HAS NOT LOADED DATA SET BUT ATTEMPTING TO USE SERVICES")
         return 'Use /load route to load data before proceeding \n'
     country_info_vec = []
     for x in iss_sighting_data:
@@ -303,12 +328,16 @@ def country_region_city_info(country,region,city):
                 if z['city'] == city:
                     cities_info_vec.append(z)
             if len(cities_info_vec)>0:
+                logging.info("SENDING COUNTRY-REGION-CITY SIGHTING INFORMATION TO USER")
                 return jsonify(cities_info_vec)
             else:
+                logging.error("NO MATCH FOR USER INPUT CITY")
                 return 'NO MATCH FOR INPUT CITY KEY FOUND IN COUNTRY-REGION DATA SET \n'
         else:
+            logging.error("NO MATCH FOR USER INPUT REGION")
             return 'NO MATCH FOR INPUT REGION KEY FOUND IN COUNTRY DATA SET \n'
     else:
+        logging.error("NO MATCH FOR USER INPUT COUNTRY")
         return 'NO MATCH FOR INPUT COUNTRY KEY FOUND IN DATA SET \n'
 
 ############################################################################################################################
