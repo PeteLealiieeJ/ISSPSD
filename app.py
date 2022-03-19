@@ -59,6 +59,7 @@ def usage_info():
     ]
     
     sight_tab = [
+        ['Regional Sightings Data Query Routes:',''],
         ['/countries','(GET) List of all countries in data set'],
         ['/countries/<country>','(GET) Sighting Information in Specified <country>'],
         ['/countries/<country>/regions','(GET) List of all regions in <country>'],
@@ -72,10 +73,10 @@ def usage_info():
         ['',''],
     ]
 
-    full_tab = usage_tab + spacer_tab + pos_tab + spacer_tab + sight_tab
+    full_tab = usage_tab + spacer_tab + pos_tab + spacer_tab + sight_tab + spacer_tab
     usage_str = '\n'
     for x in full_tab:
-        usage_str += ( "    {: <20} {: <20} ".format(*x) + '\n' )
+        usage_str += ( "    {: <70} {: <70} ".format(*x) + '\n' )
     
     return usage_str
 
