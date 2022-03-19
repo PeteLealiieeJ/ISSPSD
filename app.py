@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 import requests 
 import xmltodict
 import logging 
+import socket
+
 
 ############################################################################################################################
 ### CONSTANTS
@@ -13,6 +15,11 @@ SIGHTING_URL = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/
 ### FLASK
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
+
+############################################################################################################################
+### Logging & Socketing
+format_str=f'[%(asctime)s {socket.gethostname()}] %(filename)s:%(funcName)s:%(lineno)s - %(levelname)s: %(message)s'
+logging.basicConfig(level=logging.DEBUG, format=format_str)
 
 ############################################################################################################################
 ### VARIABLES DECLARED FOR GLOBAL SCOPE
@@ -100,8 +107,7 @@ def read_data_from_url():
     if not readonce:
         logging.info("DATA LOADED ONCE BY USER")
         readonce = True
-    return f'Data has been scraped from ISS positioning and sighting URL sources below: \n \
-            Positioning: {EPOCH_URL} \n Sighting: {SIGHTING_URL} \n'
+    return f'Data has been scraped from ISS positioning and sighting URL sources below: \n Positioning: {EPOCH_URL} \n Sighting: {SIGHTING_URL} \n'
     
 
 
