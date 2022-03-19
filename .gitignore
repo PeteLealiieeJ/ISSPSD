@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# XML FILES 
+ISS.OEM_J2K_EPH.xml
+XMLsightingData_citiesUSA10.xml

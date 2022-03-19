@@ -10,6 +10,8 @@ import socket
 EPOCH_URL = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_OEM/ISS.OEM_J2K_EPH.xml'  
 SIGHTING_URL = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_sightings/XMLsightingData_citiesUSA10.xml' 
 #SIGHTING_URL = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_sightings/XMLsightingData_citiesINT01.xml'
+EPOCH_FILE = 'ISS.OEM_J2K_EPH.xml'
+SIGHTING_FILE = 'XMLsightingData_citiesUSA10.xml'
 
 ############################################################################################################################
 ### FLASK
@@ -29,7 +31,7 @@ readonce = False
 
 ############################################################################################################################
 ### MISCELLANEOUS FUNCTIONS
-def get_xml_data(url_str:str)->dict:
+def get_xml_data_url(url_str:str)->dict:
     """                                                                                                                                                                                              
     Uses input url string to web accessible xml contnet and outputs dictionary filed from parsed xml data                       
     args:
@@ -42,6 +44,19 @@ def get_xml_data(url_str:str)->dict:
     logging.info("DATA PARSED SUCCESSFULLY FROM URL")
     return data_dict
 
+
+def get_xml_data_file(file_str:str)->dict:
+    """                                                                                                                                                                                              
+    Uses input url string to local xml content file and outputs dictionary filed from parsed xml data                       
+    args:
+        file_str (str): String of url to xml of ISS positioning data                                                                                                                                  
+    returns:                                                                                                                                                                                         
+        data_dict (dict): Dictionary containing ISS positioning data                                                                                                                            
+    """
+    with open(file_str, 'r') as f:
+        data_dict = xmltodict.parse( f.read() )
+    logging.info("DATA PARSED SUCCESSFULLY FROM FILE")
+    return data_dict
 
 ############################################################################################################################
 ### USAGE INFOFORMATION FUNCTION
@@ -58,7 +73,8 @@ def usage_info():
         ['',''],
         ['Informational and Management Routes:', ''],
         ['/', '(GET) Print Route Information'],
-        ['/load', '(POST) Loads/Overwrites Data from URL ISS sources'  ]
+        ['/load_url', '(POST) Loads/Overwrites Data from URL ISS sources'  ],
+        ['/load_file', '(POST) Loads/Overwrites Data from local ISS data files'  ],
     ]
 
     pos_tab = [
@@ -90,7 +106,7 @@ def usage_info():
     return usage_str
 
 
-@app.route('/load', methods=['POST'])
+@app.route('/load_url', methods=['POST'])
 def read_data_from_url():
     """                                                                                                                                                                                              
     Called to update the global positioning and sighting data sets used for services                    
@@ -102,14 +118,33 @@ def read_data_from_url():
     global iss_epoch_data
     global iss_sighting_data
     global readonce
-    iss_epoch_data = get_xml_data(EPOCH_URL)['ndm']['oem']['body']['segment']['data']['stateVector']
-    iss_sighting_data = get_xml_data(SIGHTING_URL)['visible_passes']['visible_pass']
+    iss_epoch_data = get_xml_data_url(EPOCH_URL)['ndm']['oem']['body']['segment']['data']['stateVector']
+    iss_sighting_data = get_xml_data_url(SIGHTING_URL)['visible_passes']['visible_pass']
     if not readonce:
         logging.info("DATA LOADED ONCE BY USER")
         readonce = True
     return f'Data has been scraped from ISS positioning and sighting URL sources below: \n Positioning: {EPOCH_URL} \n Sighting: {SIGHTING_URL} \n'
-    
 
+
+@app.route('/load_file', methods=['POST'])
+def read_data_from_file():
+    """                                                                                                                                                                                              
+    Called to update the global positioning and sighting data sets used for services                    
+    args:
+        (none)                                                                                                                               
+    returns:                                                                                                                                                                                         
+       (str): Comfirmation of completed parse                                                                                                                           
+    """
+    global iss_epoch_data
+    global iss_sighting_data
+    global readonce
+    iss_epoch_data = get_xml_data_file(EPOCH_FILE)['ndm']['oem']['body']['segment']['data']['stateVector']
+    iss_sighting_data = get_xml_data_file(SIGHTING_FILE)['visible_passes']['visible_pass']
+    if not readonce:
+        logging.info("DATA LOADED ONCE BY USER")
+        readonce = True
+    return f'Data has been scraped from ISS positioning and sighting files below: \n Positioning: {EPOCH_FILE} \n Sighting: {SIGHTING_FILE} \n'
+    
 
 ############################################################################################################################
 ### ISS POSITIONING DATA FUNCTIONS 
