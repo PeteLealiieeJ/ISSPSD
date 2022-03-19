@@ -2,27 +2,28 @@ from flask import Flask, request, jsonify
 import requests 
 import xmltodict
 
-
+############################################################################################################################
 ### CONSTANTS
-epoch_url_str = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_OEM/ISS.OEM_J2K_EPH.xml'  
-sighting_url_str = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_sightings/XMLsightingData_citiesUSA10.xml' 
-#sighting_url_str = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_sightings/XMLsightingData_citiesINT01.xml'
+EPOCH_URL = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_OEM/ISS.OEM_J2K_EPH.xml'  
+SIGHTING_URL = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_sightings/XMLsightingData_citiesUSA10.xml' 
+#SIGHTING_URL = 'https://nasa-public-data.s3.amazonaws.com/iss-coords/2022-02-13/ISS_sightings/XMLsightingData_citiesINT01.xml'
+
+############################################################################################################################
+### FLASK
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
-
-### GLOBAL VARIABLES 
+############################################################################################################################
+### VARIABLES DECLARED FOR GLOBAL SCOPE
 iss_epoch_data = []
 iss_sighting_data = []
 readonce = False
 
-
-
+############################################################################################################################
 ### MISCELLANEOUS FUNCTIONS
 def get_xml_data(url_str:str)->dict:
     """                                                                                                                                                                                              
-    Uses input url string and outputs dictionary of parsed xml data
-                               
+    Uses input url string to web accessible xml contnet and outputs dictionary filed from parsed xml data                       
     args:
         url_str (str): String of url to xml of ISS positioning data                                                                                                                                  
     returns:                                                                                                                                                                                         
@@ -33,10 +34,16 @@ def get_xml_data(url_str:str)->dict:
     return data_dict
 
 
-
+############################################################################################################################
 ### USAGE INFOFORMATION FUNCTION
 @app.route('/', methods=['GET'])
 def usage_info():
+    """                                                                                                                                                                                              
+    Called to print usage information for API
+        (none)                                                                                                                                  
+    returns:                                                                                                                                                                                         
+        (str) Formatted Usage Information for users                                                                                                                            
+    """
     usage_tab = [
         ['### ISS Positioning and Sighting Data Tracker (ISSPSDT) ###', ''],
         ['',''],
@@ -52,7 +59,13 @@ def usage_info():
     ]
     
     sight_tab = [
-        ['',''],
+        ['/countries','(GET) List of all countries in data set'],
+        ['/countries/<country>','(GET) Sighting Information in Specified <country>'],
+        ['/countries/<country>/regions','(GET) List of all regions in <country>'],
+        ['/countries/<country>/regions/<region>','(GET) Sighting Information in Specified <country>&<region>'],
+        ['/countries/<country>/regions/<region>/cities','(GET) List of all cities in <country>&<region>'],
+        ['/countries/<country>/regions/<region>/cities/<city>','(GET) Sighting Information in Specified <country>&<region>&<city>'],
+
     ]
 
     spacer_tab = [
@@ -69,28 +82,36 @@ def usage_info():
 
 @app.route('/load', methods=['POST'])
 def read_data_from_url():
+    """                                                                                                                                                                                              
+    Called to update the global positioning and sighting data sets used for services                    
+    args:
+        (none)                                                                                                                               
+    returns:                                                                                                                                                                                         
+       (str): Comfirmation of completed parse                                                                                                                           
+    """
     global iss_epoch_data
     global iss_sighting_data
     global readonce
-    iss_epoch_data = get_xml_data(epoch_url_str)['ndm']['oem']['body']['segment']['data']['stateVector']
-    iss_sighting_data = get_xml_data(sighting_url_str)['visible_passes']['visible_pass']
+    iss_epoch_data = get_xml_data(EPOCH_URL)['ndm']['oem']['body']['segment']['data']['stateVector']
+    iss_sighting_data = get_xml_data(SIGHTING_URL)['visible_passes']['visible_pass']
     if not readonce:
         readonce = True
-    return f'Data has been scraped from ISS positioning and sighting URL sources below: \n Positioning: {epoch_url_str} \n Sighting: {sighting_url_str} \n'
+    return f'Data has been scraped from ISS positioning and sighting URL sources below: \n \
+            Positioning: {EPOCH_URL} \n Sighting: {SIGHTING_URL} \n'
     
 
 
-
+############################################################################################################################
 ### ISS POSITIONING DATA FUNCTIONS 
 @app.route('/epochs', methods=['GET'])
 def epochs():
     """                                                                                                                                                                                              
     Called to return all epochs in the ISS positioning data set 
-
     args:                                                                                                                                                                                            
         (none)                                                                                                                                 
     returns:                                                                                                                                                                                       
-        (jsonify-ed list): Jsonified List containing all Epochs in Posiition Data Set                                                                                                                    """
+        (jsonify-ed list): Jsonified List containing all Epochs in Position Data Set                                                                                                                    
+    """
     if not readonce:
         return 'Use /load route to load data before proceeding \n'
     epoch_vec = []
@@ -102,10 +123,12 @@ def epochs():
 @app.route('/epochs/<epoch>',methods=['GET'])
 def epoch_state(epoch):
     """                                                                                                                                                                                              
-    Called to return information about specfic epoch in the ISS positioning data set                                                                                                                                       
+    Called to return positioning information about specific epoch in the ISS positioning data set                                                                                                                                       
     args:                                                                                                                                                                                            
         epoch (str): String of Epoch obtained from route 
-    returns:                                                                                                                                                                                                 (jsonify-ed list): Jsonified Dictionary of Positioning Information at input epoch                                                                                                                    (str): Error string stating that specified epoch was not found 
+    returns:                                                                                                                                                                                                 
+        (jsonify-ed dict): Jsonified Dictionary of Positioning Information at input epoch                                                                                                                    
+        (str): Error string stating that specified epoch was not found 
     """
     if not readonce:
         return 'Use /load route to load data before proceeding \n'
@@ -116,7 +139,7 @@ def epoch_state(epoch):
 
 
 
-
+############################################################################################################################
 ### SIGHTING DATA FUNCTIONS 
 
 @app.route('/countries', methods=['GET'])
@@ -143,8 +166,9 @@ def country_sightings(country):
     Called to return information about sightings in specified country in the ISS sighting data set                                                                                    
                                                                                                                                                                                                      
     args:                                                                                                                                                                                            
-        country (str): String of country obtained from route                                                                                                                                             returns:                                                                                                                                                                                      
-        (jsonify-ed list): Jsonified Dictionary of sighting information at input country                                                                                                          
+        country (str): String of country obtained from route                                                                                                                                             
+    returns:                                                                                                                                                                                      
+        (jsonify-ed dict): Jsonified Dictionary of sighting information at input country                                                                                                          
         (str): Error string stating that specified country was not found                                                                                                                               
     """
     if not readonce:
@@ -164,8 +188,10 @@ def country_regions(country):
     Called to return sighting regions in specified country in the ISS sighting data set                                                                                                    
     args:                                                                                                                                                                                            
         country (str): String of country obtained from route                                                                                                                                         
-    returns:                                                                                                                                                                                                 (jsonify-ed list): Jsonified list of sighting regions in input country                                                                                                                     
-        (str): Error string stating that specified country was not found                                                                                                                                 """
+    returns:                                                                                                                                                                                                 
+        (jsonify-ed list): Jsonified list of sighting regions in input country                                                                                                                     
+        (str): Error string stating that specified country was not found                                                                                                                                 
+    """
     if not readonce:
         return 'Use /load route to load data before proceeding \n'
     country_info_vec = []
@@ -190,8 +216,8 @@ def country_region_info(country,region):
         country (str): String of country obtained from route
         region (str): String of region obtained from route
     returns:                                                                                                                                                                                         
-        (jsonify-ed dict): Jsonified dictionary for specified country-region                                                                                                                      
-        (str): Error string stating that specified country was not found                                                                                                                           
+        (jsonify-ed dict): Jsonified dictionary of sighting information for specified country-region                                                                                                                      
+        (str): Error string stating that specified country or region was not found                                                                                                                           
     """
     if not readonce:
         return 'Use /load route to load data before proceeding \n'
@@ -217,10 +243,12 @@ def country_region_info(country,region):
 def country_region_cities(country,region):
     """                                                                                                                                                                                              
     Called to return the cities in the specified country and region in the ISS sighting data set                                                                                                     
-
     args:
-        country (str): String of country obtained from route                                                                                                                                                 region (str): String of region obtained from route                                                                                                                                               returns:                                                                                                                                                                                         
-        (jsonify-ed list): Jsonified list of cities in specified country-region                                                                                                                              (str): Error string stating that specified country or region was not found                                                                                                                              
+        country (str): String of country obtained from route                                                                                                                                                 
+        region (str): String of region obtained from route                                                                                                                                               
+    returns:                                                                                                                                                                                         
+        (jsonify-ed list): Jsonified list of cities in specified country-region                                                                                                                              
+        (str): Error string stating that specified country or region was not found                                                                                                                              
     """
     if not readonce:
         return 'Use /load route to load data before proceeding \n'
@@ -247,9 +275,13 @@ def country_region_cities(country,region):
 
 @app.route('/countries/<country>/regions/<region>/cities/<city>',methods=['GET'])
 def country_region_city_info(country,region,city):
-    """                                                                                                                                                                                                                                                           Called to return the sighing data in the specified country-region-city in the ISS sighting data set                                                                                                                                                          args:                                                                                                                                                                                                                                                            country (str): String of country obtained from route                                                                                                                                                 
-         region (str): String of region obtained from route                                                                                                                                               
-    returns:                                                                                                    \
+    """ 
+    Called to return the sighting data in the specified country-region-city in the ISS sighting data set                                                                                                                                                          
+    args:                                                                                                                                                                                                                                                            
+        country (str): String of country obtained from route                                                                                                                                                 
+        region (str): String of region obtained from route 
+        city (str): String of city obtained from route                                                                                                                                              
+    returns:                                                                                                  
         (jsonify-ed dict): Jsonified dictionary of sightings in specified country-region-city                                                                                                                              
         (str): Error string stating that specified country, region, or city was not found                                                                                                                                                                                                                                    
     """
@@ -278,7 +310,9 @@ def country_region_city_info(country,region,city):
     else:
         return 'NO MATCH FOR INPUT COUNTRY KEY FOUND IN DATA SET \n'
 
-
+############################################################################################################################
 ### MAIN 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
+############################################################################################################################
