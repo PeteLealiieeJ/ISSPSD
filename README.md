@@ -10,7 +10,7 @@ In order to sift through this abundance of ISS data we've created the ISSPSDT RE
  
 Aside from being here on Github, the ISSPSDT pre-built working container is also on Dockerhub and can be pulled with the command below. Note that this repository also provides the tools necessary to build an image of this repository as well.
 
-    docker pull petelealiieej/isspdt
+    docker pull petelealiieej/isspdt:midterm
 
 (notice that this image is pulled as isspdt and NOT isspsdt)
 
