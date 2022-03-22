@@ -62,7 +62,7 @@ Because data must be read from two sources and saved via POST methods, we includ
 The next few functions have different things they return; However, they all work similarly to one another. Understanding this, a general explanation is provided for each general route case.
 
 The '/things' GET routes, whether those "things" be epochs, countries, regions, or cities, returns all of the values for a given key in a set of data. Should there be multiple things-s, such as in a '/things1/<thing1\>/things2>' route, then the service will return all values for the things2 key in data elements from thing1 and its subsequent filtering. This is done in the functions below by sifting through all the elements in the current element data list and appending to a new specialized-specific organized list only containing data elements respective to the route - doing this for each group of things gives a filtered list of the things the user is looking for. Functions that use this method:
-- epoch() -> '/epoch'
+- epochs() -> '/epochs'
 - countries() -> 'countries'
 - country_regions(country) -> '/countries/<country\>/regions'
 - country_regions_cities(country,region) -> '/countries/<country\>/regions/<region\>/cities'
